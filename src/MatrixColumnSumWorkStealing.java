@@ -1,12 +1,13 @@
 import java.util.concurrent.RecursiveTask;
 
-public class ColumnSumRecursiveTask extends RecursiveTask<int[]> {
-    private static final int THRESHOLD = 100; // Гранична кількість стовпців для прямого обчислення
+public class MatrixColumnSumWorkStealing extends RecursiveTask<int[]> {
+    private final int colsPerThread;
     private final int[][] matrix;
     private final int startCol;
     private final int endCol;
 
-    public ColumnSumRecursiveTask(int[][] matrix, int startCol, int endCol) {
+    public MatrixColumnSumWorkStealing(int[][] matrix, int startCol, int endCol, int colsPerThread) {
+        this.colsPerThread = colsPerThread;
         this.matrix = matrix;
         this.startCol = startCol;
         this.endCol = endCol;
@@ -16,12 +17,12 @@ public class ColumnSumRecursiveTask extends RecursiveTask<int[]> {
     protected int[] compute() {
         int numCols = endCol - startCol;
 
-        if (numCols <= THRESHOLD) return computeDirectly();
+        if (numCols <= colsPerThread) return computeDirectly();
 
         int mid = startCol + numCols / 2;
 
-        ColumnSumRecursiveTask leftTask = new ColumnSumRecursiveTask(matrix, startCol, mid);
-        ColumnSumRecursiveTask rightTask = new ColumnSumRecursiveTask(matrix, mid, endCol);
+        MatrixColumnSumWorkStealing leftTask = new MatrixColumnSumWorkStealing(matrix, startCol, mid, colsPerThread);
+        MatrixColumnSumWorkStealing rightTask = new MatrixColumnSumWorkStealing(matrix, mid, endCol, colsPerThread);
 
         leftTask.fork();
         int[] rightResult = rightTask.compute();
